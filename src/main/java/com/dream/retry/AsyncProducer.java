@@ -1,7 +1,11 @@
 package com.dream.retry;
 
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import org.apache.rocketmq.client.producer.SendCallback;
+import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author : huzejun
@@ -20,10 +24,29 @@ public class AsyncProducer {
 
         for (int i = 0; i < 100; i++) {
             byte[] body = ("Hi," + i).getBytes();
-            Message msg = new Message("myTopicA", "myTag", body);
+            try {
+                Message msg = new Message("myTopicA", "myTag", body);
+                // 异步发送，指定回调
+                producer.send(msg, new SendCallback() {
+                    // 当producer接收到MQ发送到的ACK后就会触发该回调 方法的执行
+                    @Override
+                    public void onSuccess(SendResult sendResult) {
+                        System.out.println(sendResult);
+                    }
 
-
-        }
+                    @Override
+                    public void onException(Throwable e) {
+                        e.printStackTrace();
+                    }
+                });
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }   //end-for
+        // sleep一会儿
+        // 由于采用的是异步发送，所以若这里不sleep,则消息清空未发送就会将producer给关闭，报错
+        TimeUnit.SECONDS.sleep(3);
+        producer.shutdown();
     }
 
 }

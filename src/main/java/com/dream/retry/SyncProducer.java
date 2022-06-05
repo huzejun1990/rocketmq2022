@@ -1,6 +1,7 @@
 package com.dream.retry;
 
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
 
 /**
@@ -27,7 +28,11 @@ public class SyncProducer {
             Message msg = new Message("someTopic", "someTag", body);
             //为消息指定key
             msg.setKeys("key-" + i);
+            // 发送消息
+            SendResult sendResult = producer.send(msg);
+            System.out.println(sendResult);
         }
-        
+        //关闭
+        producer.shutdown();
     }
 }
